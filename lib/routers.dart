@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lifecycle/lifecycle.dart';
 import 'package:suixin_app/chat_page.dart';
 import 'package:suixin_app/login_page.dart';
 import 'package:suixin_app/login_verification_code.dart';
@@ -19,8 +20,8 @@ class AppRouters {
         .push("/chat?role_id=$roleId&role_name=$roleName&role_pic=$rolePic");
   }
 
-  static void pushToLogin(BuildContext context) {
-    return context.replace("/mobile-login");
+  static pushToLogin(BuildContext context) {
+    return context.push("/mobile-login");
   }
 
   static Future pushToShare(BuildContext context) {
@@ -29,7 +30,9 @@ class AppRouters {
 }
 
 /// The route configuration.
-final GoRouter routers = GoRouter(routes: <RouteBase>[
+final GoRouter routers = GoRouter(observers: [
+  defaultLifecycleObserver
+], routes: <RouteBase>[
   GoRoute(
     path: "/mobile-login",
     builder: (context, state) {
@@ -63,7 +66,7 @@ final GoRouter routers = GoRouter(routes: <RouteBase>[
   GoRoute(
     path: "/",
     builder: (context, state) {
-      return const TestPage();
+      return const MyHomePage();
     },
   )
 ]);

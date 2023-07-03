@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lifecycle/lifecycle.dart';
 import 'package:suixin_app/app_colors.dart';
 import 'package:toast/toast.dart';
 
@@ -14,57 +15,7 @@ import 'package:suixin_app/typography.dart';
 import 'package:suixin_app/widgets/loading.dart';
 
 void main() {
-  usePathUrlStrategy();
   runApp(const MyApp());
-}
-
-class TestPage extends StatelessWidget, {
-  const TestPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        body: NestedScrollView(
-      headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-        return <Widget>[
-          SliverAppBar(
-            title: Text('NestedScrollView'),
-            pinned: true,
-            floating: true,
-            snap: true,
-            bottom: TabBar(
-              tabs: <Widget>[
-                Tab(text: 'Tab1'),
-                Tab(text: 'Tab2'),
-              ],
-            ),
-          ),
-        ];
-      },
-      body: RefreshIndicator(
-        onRefresh: _onRefresh,
-        child: TabBarView(
-          controller: TabController(length: 2, vsync: this),
-          children: <Widget>[
-            ListView.builder(
-              itemBuilder: (BuildContext context, int index) {
-                return ListTile(title: Text('Item $index'));
-              },
-            ),
-            ListView.builder(
-              itemBuilder: (BuildContext context, int index) {
-                return ListTile(title: Text('Item $index'));
-              },
-            ),
-          ],
-        ),
-      ),
-    ));
-  }
-
-  Future<void> _onRefresh() {
-    return Future.value();
-  }
 }
 
 class MyApp extends StatelessWidget {
@@ -91,7 +42,8 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage>
+    with LifecycleAware, LifecycleMixin {
   List<Role> roles = [];
   int _stamina = 0;
 
@@ -99,22 +51,6 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     showLoading();
-    if (UserManager().isLogin()) {
-      HttpApis().getHomeRoles().then((value) {
-        setState(() {
-          roles = value?.roles ?? [];
-          _stamina = value?.stamina ?? 0;
-        });
-        dismissLoading();
-      }).onError((error, stackTrace) {
-        dismissLoading();
-        if (error is XTBizError && error.code == "401") {
-          AppRouters.pushToLogin(context);
-        }
-      });
-    } else {
-      AppRouters.pushToLogin(context);
-    }
   }
 
   @override
@@ -208,6 +144,31 @@ class _MyHomePageState extends State<MyHomePage> {
         ]),
       ),
     );
+  }
+
+  @override
+  void onLifecycleEvent(LifecycleEvent event) {
+    if (event == LifecycleEvent.visible) {
+      if (UserManager().isLogin()) {
+        HttpApis().getHomeRoles().then((value) {
+          setState(() {
+            roles = value?.roles ?? [];
+            _stamina = value?.stamina ?? 0;
+          });
+          dismissLoading();
+        }).onError((error, stackTrace) {
+          dismissLoading();
+          if (error is XTBizError && error.code == "401") {
+            AppRouters.pushToLogin(context);
+          }
+        });
+      } else {
+        Future.delayed(Duration(seconds: 1000)).then((value) {
+          AppRouters.pushToLogin(context);
+          dismissLoading();
+        });
+      }
+    }
   }
 }
 

@@ -47,6 +47,7 @@ dependencies:
   loading_animation_widget: ^1.2.0+4
   loading_indicator: ^3.1.0
   flutter_riverpod: ^2.3.6
+  lifecycle: ^0.7.0
 
 dev_dependencies:
   flutter_test:
